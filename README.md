@@ -1,2 +1,97 @@
 # Vidyarthi_AI_Project
-Spam filtering
+
+
+**Spam filtering**
+
+Spam Filter using Naive Bayes
+This program uses scikit-learn for the machine learning pipeline and a mock dataset to demonstrate the core steps:
+
+**Data Preparation**: Loading a dataset of messages and their labels (spam/ham).
+
+**Text Preprocessing**: Converting text into a numerical format using TF-IDF (Term Frequency-Inverse Document Frequency), a sophisticated version of the Bag-of-Words model.
+
+**Model Training**: Training a Multinomial Naive Bayes classifier.
+
+**Evaluation**: Testing the model's ability to distinguish between spam and ham.
+
+
+
+# Code
+
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.metrics import classification_report, accuracy_score
+
+
+data = {
+    'text': [
+        "Free entry in 2 a wkly comp to win FA Cup final tkts.",
+        "Nah I don't think he goes to usf, he lives around here",
+        "WINNER! U have been randomly selected to receive a prize.",
+        "Had your mobile 11 months or more? U R entitled to Update",
+        "How about now, are you free this afternoon for lunch?",
+        "As a valued customer, I am pleased to advise you of a 10% discount",
+        "URGENT! Your account has been suspended. Click here to verify.",
+        "Call me back on 07978888888. A major prize awaits.",
+        "Hey man, what's up? Are we still on for the movie tonight?",
+        "Get 2 FREE film vouchers. Call 0845xxxxxxx now!",
+    ],
+    'label': ['spam', 'ham', 'spam', 'spam', 'ham', 'ham', 'spam', 'spam', 'ham', 'spam']
+}
+
+df = pd.DataFrame(data)
+
+
+df['label_code'] = df['label'].map({'ham': 0, 'spam': 1})
+
+X = df['text'] 
+y = df['label_code']  
+
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.3, random_state=42
+)
+print(f"Training set size: {len(X_train)} messages")
+print(f"Testing set size: {len(X_test)} messages")
+
+
+vectorizer = TfidfVectorizer(
+    stop_words='english', 
+    lowercase=True, 
+    max_features=1000 
+)
+
+X_train_vec = vectorizer.fit_transform(X_train)
+
+X_test_vec = vectorizer.transform(X_test)
+
+
+
+model = MultinomialNB()
+print("\nStarting Naive Bayes training...")
+model.fit(X_train_vec, y_train)
+print("Model training complete.")
+
+
+y_pred = model.predict(X_test_vec)
+
+print("\n--- Model Evaluation ---")
+print("\nClassification Report:")
+print(classification_report(y_test, y_pred, target_names=['Ham (0)', 'Spam (1)']))
+
+
+
+def predict_spam(message):
+    
+  message_vec = vectorizer.transform([message])
+  prediction = model.predict(message_vec)[0]
+  probabilities = model.predict_proba(message_vec)[0]
+  result = "SPAM" if prediction == 1 else "HAM"
+  prob_spam = probabilities[1] * 100 
+  print(f"\nMessage: '{message}'")
+  print(f"Prediction: **{result}** (Spam Probability: {prob_spam:.2f}%)")
+
+predict_spam("Congratulations! You've won a FREE iPhone. Claim your prize now!")
+predict_spam("Just checking in to see if you wanted to grab coffee later today.")
